@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    environment {
+        SSH_KEY = credentials('your-ssh-key')  // Set up SSH key in Jenkins
+        SERVER_IP = "13.233.84.225"  // Replace with actual EC2 IP
+        DEPLOY_DIR = "/var/www/html"  // Deployment directory for NGINX
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', credentialsId: 'your-ssh-key', url: 'https://github.com/sumit0106/JenkinsFlytbase.git'
+            }
+        }
+
+        stage('Deploy Update') {
+            steps {
+                script {
+                    sshagent(['your-ssh-key']) {
+                        sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} << EOF
+                        cd ${DEPLOY_DIR}
+                        echo 'System Monitoring Page v2' > index.html
+                        sudo systemctl restart nginx
+                        EOF
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    sh "curl -I http://${SERVER_IP} | grep '200 OK'"
+                }
+            }
+        }
+    }
+}
