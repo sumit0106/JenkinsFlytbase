@@ -17,9 +17,9 @@ pipeline {
         stage('Deploy Update') {
             steps {
                 script {
-                    sshagent(['your-ssh-key']) {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'your-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                         sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} << EOF
+                        sh 'ssh -i $SSH_KEY -o StrictHostKeyChecking=no ec2-user13.233.84.225 << EOF'
                         cd ${DEPLOY_DIR}
                         echo 'System Monitoring Page v2' > index.html
                         sudo systemctl restart nginx
